@@ -48,8 +48,8 @@ import os, time, threading, requests
 import uvicorn
 from pyngrok import ngrok
 
-GROQ_API_KEY = "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"   # from console.groq.com
-NGROK_TOKEN  = "3Es3IhXh7Ht4QhWlbLGEXa8zWaw_66YgaRnLfcYtx8Ct5y3gu"     # from ngrok.com/dashboard
+GROQ_API_KEY = " paste groqKey"   # from console.groq.com
+NGROK_TOKEN  = "paste ngrok token"     # from ngrok.com/dashboard
 
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 ngrok.set_auth_token(NGROK_TOKEN)
