@@ -7,10 +7,10 @@ import Interview    from './pages/Interview.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import VerifyEmail  from './pages/VerifyEmail.jsx'
 
+// DEMO: Guard disabled — always renders children directly
 function Guard({ children }) {
-  return localStorage.getItem('token')
-    ? children
-    : <Navigate to="/login" replace />
+  return children
+  // ORIGINAL: return localStorage.getItem('token') ? children : <Navigate to="/login" replace />
 }
 
 export default function App() {
