@@ -21,10 +21,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        var user = userService.register(req);
-        verificationService.sendVerification(user);
+        userService.register(req);
         return ResponseEntity.status(201).body(
-            Map.of("message", "Account created! Check your email to verify."));
+            Map.of("message", "Account created! You can now sign in."));
     }
 
     @PostMapping("/login")

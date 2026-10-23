@@ -4,24 +4,24 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
 })
 
-// DEMO: JWT attach disabled — no token exists
-// api.interceptors.request.use((cfg) => {
-//   const token = localStorage.getItem('token')
-//   if (token) cfg.headers.Authorization = `Bearer ${token}`
-//   return cfg
-// })
+// Auto-attach JWT
+api.interceptors.request.use((cfg) => {
+  const token = localStorage.getItem('token')
+  if (token) cfg.headers.Authorization = `Bearer ${token}`
+  return cfg
+})
 
-// DEMO: Auto-logout disabled — no auth for demo
-// api.interceptors.response.use(
-//   (res) => res,
-//   (err) => {
-//     if (err.response?.status === 401) {
-//       localStorage.clear()
-//       window.location.href = '/login'
-//     }
-//     return Promise.reject(err)
-//   }
-// )
+// Auto-logout on 401
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.clear()
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
 
 // ── Auth ──────────────────────────────────────────────────────
 export const login    = (data) => api.post('/api/auth/login', data)

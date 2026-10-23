@@ -32,7 +32,7 @@ public class UserService implements UserDetailsService {
             .name(req.name())
             .email(req.email())
             .password(encoder.encode(req.password()))
-            .enabled(false)
+            .enabled(true)   // email verification skipped — users can log in right after signup
             .build());
     }
 

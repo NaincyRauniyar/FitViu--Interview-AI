@@ -6,34 +6,18 @@ import toast from 'react-hot-toast'
 export default function Register() {
   const [form, setForm]     = useState({ name: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [done, setDone]     = useState(false)
   const nav = useNavigate()
 
   const submit = async (e) => {
     e.preventDefault(); setLoading(true)
     try {
       await register(form)
-      setDone(true)
+      toast.success('Account created! Please sign in.')
+      nav('/login')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed')
     } finally { setLoading(false) }
   }
-
-  if (done) return (
-    <div className="auth-page">
-      <div className="auth-card" style={{ textAlign:'center' }}>
-        <div style={{ fontSize:48, marginBottom:16 }}>📧</div>
-        <h2 className="auth-title">Check your email</h2>
-        <p style={{ fontSize:13, color:'var(--text-muted)', marginTop:8, lineHeight:1.7 }}>
-          We sent a verification link to <strong>{form.email}</strong>.
-          Click it to activate your account, then sign in.
-        </p>
-        <Link to="/login" className="btn btn-primary btn-full btn-lg" style={{ marginTop:20, display:'flex' }}>
-          Go to Sign in →
-        </Link>
-      </div>
-    </div>
-  )
 
   return (
     <div className="auth-page">
