@@ -1,0 +1,9 @@
+# secrets
+.env
+.env.*
+
+# build output
+node_modules/
+dist/
+target/
+__pycache__/

@@ -5,6 +5,7 @@
 # ══════════════════════════════════════════════════════════════
 
 import os, json, io, tempfile
+import httpx
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -24,18 +25,19 @@ app.add_middleware(
 
 # ── LLMs (Groq — free tier) ───────────────────────────────────
 _key = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 if not _key:
     print("⚠️  GROQ_API_KEY not set — set it before starting")
 
 llm = ChatGroq(
     groq_api_key=_key,
-    model_name="llama3-8b-8192",
+    model_name=GROQ_MODEL,
     temperature=0.7,
     max_tokens=1500,
 )
 llm_eval = ChatGroq(
     groq_api_key=_key,
-    model_name="llama3-8b-8192",
+    model_name=GROQ_MODEL,
     temperature=0.2,
     max_tokens=800,
 )
@@ -43,17 +45,9 @@ llm_eval = ChatGroq(
 # ── Adaptive session memory ────────────────────────────────────
 _session_memory: dict[str, list[str]] = {}
 
-# ── Whisper (lazy-load on first call) ─────────────────────────
-_whisper_model = None
-
-def get_whisper():
-    global _whisper_model
-    if _whisper_model is None:
-        import whisper
-        print("⏳ Loading Whisper base model (one-time, ~30s)...")
-        _whisper_model = whisper.load_model("base")
-        print("✅ Whisper ready")
-    return _whisper_model
+# ── Whisper via Groq API (no local model / PyTorch needed) ─────
+GROQ_STT_URL   = "https://api.groq.com/openai/v1/audio/transcriptions"
+GROQ_STT_MODEL = "whisper-large-v3-turbo"
 
 # ── JSON cleaner helper ────────────────────────────────────────
 def clean_json(text: str) -> str:
@@ -84,7 +78,7 @@ def clean_json(text: str) -> str:
 # ══════════════════════════════════════════════════════════════
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": "llama3-8b-8192", "version": "1.0.0"}
+    return {"status": "ok", "model": GROQ_MODEL, "version": "1.0.0"}
 
 
 # ══════════════════════════════════════════════════════════════
@@ -312,13 +306,18 @@ async def generate_report(req: ReportRequest):
 @app.post("/api/voice/transcribe")
 async def transcribe_audio(audio: UploadFile = File(...)):
     try:
-        model = get_whisper()
-        data  = await audio.read()
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-            f.write(data)
-            tmp = f.name
-        result = model.transcribe(tmp)
-        os.unlink(tmp)
-        return {"text": result["text"].strip(), "language": result["language"]}
+        data = await audio.read()
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(
+                GROQ_STT_URL,
+                headers={"Authorization": f"Bearer {_key}"},
+                files={"file": (audio.filename or "audio.wav", data, audio.content_type or "audio/wav")},
+                data={"model": GROQ_STT_MODEL, "response_format": "verbose_json"},
+            )
+        r.raise_for_status()
+        result = r.json()
+        return {"text": result["text"].strip(), "language": result.get("language", "")}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(502, f"Transcription failed: Groq returned {e.response.status_code}")
     except Exception as e:
         raise HTTPException(500, f"Transcription failed: {e}")

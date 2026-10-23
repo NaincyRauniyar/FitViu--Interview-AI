@@ -48,8 +48,14 @@ import os, time, threading, requests
 import uvicorn
 from pyngrok import ngrok
 
-GROQ_API_KEY = " paste groqKey"   # from console.groq.com
-NGROK_TOKEN  = "paste ngrok token"     # from ngrok.com/dashboard
+# Keys come from the environment / Colab Secrets (key icon in sidebar) — never paste them here
+try:
+    from google.colab import userdata
+    GROQ_API_KEY = userdata.get("GROQ_API_KEY")
+    NGROK_TOKEN  = userdata.get("NGROK_TOKEN")
+except Exception:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+    NGROK_TOKEN  = os.getenv("NGROK_TOKEN", "")
 
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 ngrok.set_auth_token(NGROK_TOKEN)
@@ -91,38 +97,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-import os
-
-print(os.getenv("GROQ_API_KEY"))
-
-import os
-
-os.environ["GROQ_API_KEY"] = "YOUR_GROQ_KEY"
-
-print("Loaded:", os.getenv("GROQ_API_KEY")[:10])
+print("GROQ_API_KEY set:", bool(os.getenv("GROQ_API_KEY")))
 
 from langchain_groq import ChatGroq
 
 llm = ChatGroq(
-    model="llama3-8b-8192",
+    model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
     temperature=0.7
 )
 
 print("Success")
 
 _key = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 if not _key:
     print("⚠️  GROQ_API_KEY not set — set it before starting")
 
 llm = ChatGroq(
     groq_api_key=_key,
-    model_name="llama3-8b-8192",
+    model_name=GROQ_MODEL,
     temperature=0.7,
     max_tokens=1500,
 )
 llm_eval = ChatGroq(
     groq_api_key=_key,
-    model_name="llama3-8b-8192",
+    model_name=GROQ_MODEL,
     temperature=0.2,
     max_tokens=800,
 )
@@ -172,7 +171,7 @@ def clean_json(text: str) -> str:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": "llama3-8b-8192", "version": "1.0.0"}
+    return {"status": "ok", "model": GROQ_MODEL, "version": "1.0.0"}
 
 """ RESUME PARSER
 

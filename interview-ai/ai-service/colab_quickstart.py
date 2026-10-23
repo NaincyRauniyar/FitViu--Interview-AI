@@ -38,9 +38,14 @@ import os, sys, time, threading, requests
 import uvicorn
 from pyngrok import ngrok
 
-# ── Paste your FREE keys ──────────────────────────
-GROQ_API_KEY = "gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # console.groq.com
-NGROK_TOKEN  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"    # ngrok.com/dashboard
+# Keys come from the environment / Colab Secrets (key icon in sidebar) — never paste them here
+try:
+    from google.colab import userdata
+    GROQ_API_KEY = userdata.get("GROQ_API_KEY")
+    NGROK_TOKEN  = userdata.get("NGROK_TOKEN")
+except Exception:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+    NGROK_TOKEN  = os.getenv("NGROK_TOKEN", "")
 
 os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 ngrok.set_auth_token(NGROK_TOKEN)

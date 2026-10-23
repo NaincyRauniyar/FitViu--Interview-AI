@@ -1,5 +1,14 @@
 # Interview AI — Setup Guide
 
+> **Deployment update:** All three parts now deploy on **Render**, not Hugging Face Spaces or Vercel,
+> because Docker Spaces on Hugging Face are no longer free.
+> - `ai-service` → Render Web Service (Docker)
+> - `backend` → Render Web Service (Docker)
+> - `frontend` → Render Static Site (build `npm install && npm run build`, publish `dist`, rewrite `/*` → `/index.html`)
+>
+> Secrets go in `interview-ai/.env` for local use and in Render's environment variables when deployed. Never put them in code.
+> See `ai-service/README.md` for details.
+
 This zip has **3 independent projects**. Each goes to its **own GitHub repo**
 and gets deployed separately. Don't put them all in one repo.
 

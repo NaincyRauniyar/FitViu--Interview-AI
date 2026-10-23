@@ -1,13 +1,3 @@
----
-title: Interview AI Service
-emoji: 🎤
-colorFrom: indigo
-colorTo: purple
-sdk: docker
-pinned: false
-app_port: 7860
----
-
 # Interview AI — FastAPI Service
 
 LangChain + Groq backend for the Interview AI platform.
@@ -22,23 +12,27 @@ LangChain + Groq backend for the Interview AI platform.
 | DELETE | `/api/questions/session/{id}` | Clear session memory |
 | POST | `/api/answers/evaluate` | Evaluate a candidate answer |
 | POST | `/api/answers/report` | Generate coaching report |
-| POST | `/api/voice/transcribe` | Whisper speech-to-text |
+| POST | `/api/voice/transcribe` | Speech-to-text (Groq Whisper API) |
 
 ## Setup
 
-### HuggingFace Spaces (deploy)
-1. Fork/push this folder to a GitHub repo
-2. Create a new Space at huggingface.co/new-space — SDK: Docker
-3. Connect your GitHub repo
-4. Add secret: `GROQ_API_KEY` = your key from console.groq.com (free)
-5. Build takes ~8 min first time
+> **Note:** We moved deployment from Hugging Face Spaces to **Render**, because Docker Spaces on Hugging Face are no longer free.
+> Speech-to-text now uses Groq's hosted Whisper API instead of a local Whisper model, so the service is light enough for Render's free tier.
 
-### Local / Colab (dev)
+### Render (deploy)
+1. Render → **New → Web Service** → connect the GitHub repo
+2. Root Directory: `interview-ai/ai-service` · Runtime: **Docker**
+3. Environment variables: `GROQ_API_KEY` (from console.groq.com), optional `GROQ_MODEL` (default `openai/gpt-oss-20b`)
+
+### Local (dev)
 ```bash
 pip install -r requirements.txt
-export GROQ_API_KEY=gsk_your_key_here
+export GROQ_API_KEY=...   # or put it in interview-ai/.env
 uvicorn interview_server:app --host 0.0.0.0 --port 8000
 ```
 
-### Colab with ngrok
-Open `colab_quickstart.ipynb` and run the 3 cells.
+Or with Docker, from `interview-ai/`:
+```bash
+docker build -t fitviu-ai ai-service
+docker run -p 8000:8000 --env-file .env fitviu-ai
+```
